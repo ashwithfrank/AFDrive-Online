@@ -1,105 +1,961 @@
-# AFDrive
+# AFDrive Online
 
-Your Personal Cloud. Your Device. Your Files.
+**Your Personal Cloud. Your Device. Your Files.**
 
-AFDrive turns a device you already own — an old phone running Termux, a
-spare laptop, a home server — into your own personal cloud, and now
-optionally lets you (and people you authorize) reach it from anywhere,
-without ever moving your files off that device.
+AFDrive Online is the online extension of [AFDrive](https://github.com/ashwithfrank/AFDrive).
 
-## Two modes, one codebase
+It allows you to run AFDrive on your own device — such as a PC, laptop, home server, or Android phone with Termux — and optionally make that storage accessible over the internet.
 
-- **Local mode** (the original AFDrive): run the Agent, open
-  `http://<device-LAN-IP>:5000` from any device on the same Wi-Fi. No
-  internet dependency, nothing to register, works exactly as it always
-  has.
-- **Online mode** (new): the same Agent also opens a secure outbound
-  connection to **AFDrive Online**, a small separate web app that
-  handles discovery, login, and routing so authorized people can reach
-  your Agent from the public internet — still without your files ever
-  leaving your device, and without forwarding a single port on your
-  router.
+Your files remain on the device running the AFDrive Agent. AFDrive Online provides the public web interface, account management, storage discovery, authentication, and secure communication between the remote browser and your Agent.
 
-## Architecture
+> **AFDrive Online is not traditional cloud storage.**
+>
+> Your device provides the storage. AFDrive Online provides the connection.
 
+---
+
+## How It Works
+
+AFDrive Online has two main components:
+
+```text
+┌──────────────────────┐
+│   Your Storage       │
+│                      │
+│  PC / Laptop /       │
+│  Android / Server    │
+│                      │
+│  AFDrive Agent       │
+│       │              │
+│       │ Secure       │
+│       │ connection   │
+└───────┼──────────────┘
+        │
+        ▼
+┌──────────────────────┐
+│   AFDrive Online     │
+│                      │
+│  Public Web App      │
+│  Authentication      │
+│  Storage Directory   │
+│  Relay                │
+│                      │
+│  Supabase             │
+│  (metadata only)     │
+└───────┬──────────────┘
+        │
+        │ HTTPS
+        ▼
+┌──────────────────────┐
+│   Remote Browser     │
+│                      │
+│  Browse your files   │
+│  Upload / Download   │
+│  Manage storage      │
+└──────────────────────┘
 ```
-AFDrive/
-├── agent/     — the Flask app that runs on YOUR device (unchanged core + tunnel)
-├── web/       — the public web app + relay (Node/Express + Socket.IO + Supabase)
-├── shared/    — the protocol contract between agent/ and web/
-└── docs/      — architecture, security, deployment, and the Supabase schema
+
+The Agent makes the connection **outbound** to AFDrive Online. This means the system is designed so that users do not need to expose their home server directly to the internet or configure router port forwarding.
+
+---
+
+# Local Mode and Online Mode
+
+AFDrive supports two modes.
+
+### Local Mode
+
+This is the original AFDrive experience.
+
+Run the Agent on your device and access it from another device connected to the same network:
+
+```text
+http://DEVICE-IP:5000
 ```
 
-See `docs/architecture.md` for why it's split this way and why Supabase
-was chosen for metadata, `docs/security.md` for the full threat model,
-and `docs/deployment.md` for exact setup steps.
+Example:
 
-## Quick start — local mode only
-
+```text
+http://192.168.1.42:5000
 ```
+
+No internet connection or online account is required.
+
+### Online Mode
+
+Online mode adds remote access:
+
+```text
+Your Device
+    ↓
+AFDrive Agent
+    ↓
+AFDrive Online
+    ↓
+Internet
+    ↓
+Remote Browser
+```
+
+You can optionally register your storage with AFDrive Online and make it discoverable to other users.
+
+---
+
+# Features
+
+## Original AFDrive Features
+
+AFDrive Online preserves the main functionality of the original AFDrive project:
+
+* 🔐 Login and logout
+* 🔑 Password hashing
+* 📁 File and folder browsing
+* 📂 Folder creation
+* ✏️ Rename files and folders
+* 🗑️ Delete files and folders
+* 🔎 Recursive file search
+* ↕️ Sorting by name, size, and date
+* 📤 Multi-file uploads
+* 📊 Upload progress
+* ♻️ Duplicate-safe filenames
+* 📥 Streaming downloads
+* 🖼️ Image previews
+* 📄 Text previews
+* 📕 PDF previews
+* 💾 Storage usage information
+* 🕒 Recent files
+* 🌙 Light and dark mode
+* 📱 Responsive mobile-first interface
+* 🛡️ Path traversal protection
+* 🛡️ Symlink escape protection
+* 🛡️ Security headers
+
+The original AFDrive reads file information directly from the filesystem rather than storing file contents in its database.
+
+---
+
+# Online Features
+
+AFDrive Online adds:
+
+* 🌐 Public web application
+* 🔎 Public storage discovery
+* 👤 Online user accounts
+* 🖥️ Storage/server registration
+* 🔗 Agent pairing
+* 🟢 Online/offline storage status
+* 🔐 Remote authentication
+* 👥 Storage access permissions
+* 🔒 Private storage support
+* 📤 Remote uploads
+* 📥 Remote downloads
+* 🔄 Secure Agent connection
+* 📊 Owner dashboard
+* 📝 Online activity/audit information
+
+The central database stores **metadata**, not your actual files.
+
+---
+
+# Project Structure
+
+```text
+AFDrive-Online/
+│
+├── agent/
+│   ├── app.py
+│   ├── config.py
+│   ├── database.py
+│   ├── fs_utils.py
+│   ├── identity.py
+│   ├── setup_cli.py
+│   ├── tunnel_client.py
+│   ├── requirements.txt
+│   ├── .env.example
+│   │
+│   ├── storage/
+│   │   └── user_files/
+│   │
+│   ├── templates/
+│   ├── static/
+│   └── tests/
+│
+├── web/
+│   ├── server.js
+│   ├── package.json
+│   ├── .env.example
+│   │
+│   ├── lib/
+│   ├── routes/
+│   ├── views/
+│   ├── public/
+│   └── tests/
+│
+├── shared/
+│   └── protocol.md
+│
+├── docs/
+│   ├── architecture.md
+│   ├── deployment.md
+│   ├── security.md
+│   └── supabase_schema.sql
+│
+└── README.md
+```
+
+### `agent/`
+
+Runs on the device that actually stores the files.
+
+It contains the original Flask-based AFDrive server plus the online Agent functionality.
+
+### `web/`
+
+The public AFDrive Online application.
+
+It contains:
+
+* Web interface
+* Authentication
+* Storage directory
+* Owner dashboard
+* Relay server
+* Agent connection handling
+
+### `shared/`
+
+Contains the communication protocol shared between the Agent and Online service.
+
+### `docs/`
+
+Contains architecture, deployment, security, and database documentation.
+
+---
+
+# Requirements
+
+## AFDrive Agent
+
+The Agent requires:
+
+* Python 3.9+
+* Flask
+* Internet connection for Online Mode
+* A directory to use as AFDrive storage
+
+It can be used on supported:
+
+* Linux
+* Windows
+* macOS
+* Android / Termux
+
+Local Mode does not require an internet connection.
+
+---
+
+## AFDrive Online Web App
+
+The online web application requires:
+
+* Node.js
+* npm
+* A Supabase project
+* A publicly reachable HTTPS deployment for remote use
+
+The web server uses Socket.IO to maintain live connections with Agents, so the deployment must support persistent WebSocket connections.
+
+---
+
+# 1. Set Up AFDrive Online
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ashwithfrank/AFDrive-Online.git
+cd AFDrive-Online
+```
+
+---
+
+# 2. Create a Supabase Project
+
+Create a new project on Supabase.
+
+The Supabase database is used for AFDrive Online metadata such as:
+
+* User accounts
+* Registered storages
+* Agent identities
+* Access permissions
+* Pairing information
+* Audit information
+
+Your actual files are **not stored in Supabase**.
+
+---
+
+# 3. Create the Database
+
+Open the Supabase SQL Editor.
+
+Run:
+
+```text
+docs/supabase_schema.sql
+```
+
+This creates the database structure required by AFDrive Online.
+
+---
+
+# 4. Configure the Web App
+
+Go to:
+
+```bash
+cd web
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create the environment file:
+
+```bash
+cp .env.example .env
+```
+
+On Windows, you can simply create a `.env` file by copying `.env.example`.
+
+Edit `.env`:
+
+```env
+PORT=8080
+NODE_ENV=development
+
+PUBLIC_BASE_URL=http://localhost:8080
+
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+SUPABASE_ANON_KEY=YOUR-ANON-KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR-SERVICE-ROLE-KEY
+
+SESSION_SECRET=YOUR-LONG-RANDOM-SECRET
+
+LOGIN_RATE_LIMIT_PER_15MIN=20
+REGISTER_RATE_LIMIT_PER_15MIN=10
+```
+
+### Important
+
+Never commit `.env` to GitHub.
+
+The Supabase service-role key must remain **server-side only**.
+
+Never place it inside:
+
+```text
+web/public/
+```
+
+or any browser-side JavaScript.
+
+---
+
+# 5. Start the Online Web App
+
+Run:
+
+```bash
+npm start
+```
+
+The server should start on:
+
+```text
+http://localhost:8080
+```
+
+Open that address in your browser.
+
+At this point you are running the AFDrive Online web application locally.
+
+---
+
+# 6. Configure the AFDrive Agent
+
+Open another terminal.
+
+From the project root:
+
+```bash
 cd agent
+```
+
+Create a Python virtual environment:
+
+### Linux / macOS
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Windows
+
+```powershell
+python -m venv venv
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
-cp .env.example .env      # set AFDRIVE_USERNAME / AFDRIVE_PASSWORD
+```
+
+Create the Agent configuration:
+
+```bash
+cp .env.example .env
+```
+
+Configure the important values:
+
+```env
+AFDRIVE_USERNAME=admin
+AFDRIVE_PASSWORD=your-strong-password
+
+AFDRIVE_STORAGE_PATH=./storage/user_files
+
+AFDRIVE_HOST=0.0.0.0
+AFDRIVE_PORT=5000
+
+AFDRIVE_DEBUG=false
+
+AFDRIVE_ONLINE_ENABLED=false
+AFDRIVE_RELAY_URL=http://localhost:8080
+AFDRIVE_SERVER_NAME=My AFDrive
+AFDRIVE_PUBLIC=false
+```
+
+---
+
+# 7. Test Local Mode First
+
+Before enabling Online Mode, make sure the original AFDrive functionality works.
+
+Run:
+
+```bash
 python app.py
 ```
 
-Open `http://localhost:5000` (or your device's LAN IP from another
-device on the same network).
+Open:
 
-## Quick start — adding online access
-
-1. Deploy `web/` somewhere (see `docs/deployment.md`) and run
-   `docs/supabase_schema.sql` against a Supabase project once.
-2. Create an account and click **Register a new storage** on your
-   AFDrive Online dashboard to get a pairing code.
-3. On your device: `cd agent && python setup_cli.py pair <CODE>`
-4. Set `AFDRIVE_ONLINE_ENABLED=true` in `agent/.env`, restart the Agent.
-5. Toggle public/private and manage who else has access from the
-   dashboard.
-
-**Only mark a storage public if you intend for anyone to be able to
-attempt to log into it.** Read `docs/security.md` before you do.
-
-## What's preserved from the original project
-
-Every original AFDrive feature works identically, whether reached over
-LAN or through the tunnel: login/logout, password hashing, protected
-routes, path-traversal and symlink-escape protection, folder browsing,
-breadcrumbs, folder create/rename/delete, recursive search, sorting,
-multi-file upload with progress, duplicate-safe filenames, streaming
-downloads, image/text/PDF previews, storage usage stats, recent files,
-light/dark mode, a responsive mobile-first UI, and the same security
-headers on every response.
-
-## What's new
-
-- An Agent identity system (`agent/identity.py`) and pairing flow
-  (`agent/setup_cli.py`) for connecting a device to AFDrive Online.
-- A generic, streaming HTTP-over-WebSocket tunnel
-  (`agent/tunnel_client.py`) so every existing route works remotely
-  without duplicating any business logic.
-- A public storage directory with search, a per-server access-grant
-  model (owner / read-only / read-write / temporary / revocable), and
-  an owner dashboard — all in `web/`.
-- A Supabase (Postgres) schema for accounts, servers, access grants,
-  pairing codes, and an audit log — metadata only, never file contents
-  or listings (`docs/supabase_schema.sql`).
-
-## Testing
-
-```
-cd agent && pytest tests/       # path safety, auth, route protection
-cd web && npm test               # relay registry / request correlation logic
+```text
+http://localhost:5000
 ```
 
-## Troubleshooting
+Log in using the credentials configured in `.env`.
 
-- **Agent won't reconnect to Online** — check `AFDRIVE_RELAY_URL` and
-  that outbound WebSocket connections aren't blocked by a firewall;
-  `agent/tunnel_client.py` retries with exponential backoff on its own.
-- **"This storage is currently offline"** in the browser — the Agent's
-  tunnel isn't connected right now; `python setup_cli.py status` on the
-  device shows its current state.
-- **Lost access to a device** — revoke it from the dashboard and
-  re-pair with `setup_cli.py pair <new code>`; the old device_secret
-  stops working immediately.
+If accessing from another device on the same network:
+
+```text
+http://YOUR-DEVICE-IP:5000
+```
+
+Make sure file browsing, uploads, downloads, folders, and authentication work correctly.
+
+---
+
+# 8. Pair the Agent with AFDrive Online
+
+Once the Online web app is running, use its dashboard to register a storage.
+
+The dashboard should provide a **pairing code** for the new Agent.
+
+On the device running AFDrive:
+
+```bash
+cd agent
+python setup_cli.py pair YOUR_PAIRING_CODE
+```
+
+The pairing process establishes the Agent's online identity.
+
+After pairing, the Agent stores its identity locally so the device does not need to be paired every time it starts.
+
+Check the status with:
+
+```bash
+python setup_cli.py status
+```
+
+---
+
+# 9. Enable Online Mode
+
+Edit:
+
+```text
+agent/.env
+```
+
+Change:
+
+```env
+AFDRIVE_ONLINE_ENABLED=true
+```
+
+Set the relay URL to the address of your AFDrive Online server:
+
+```env
+AFDRIVE_RELAY_URL=http://localhost:8080
+```
+
+For a deployed server, this will be your public HTTPS address.
+
+For example:
+
+```env
+AFDRIVE_RELAY_URL=https://your-afdrive-domain.example
+```
+
+Then start the Agent:
+
+```bash
+python app.py
+```
+
+The Agent should connect to the AFDrive Online relay.
+
+---
+
+# 10. Make Your Storage Public
+
+After the Agent successfully connects:
+
+1. Open the AFDrive Online dashboard.
+2. Find your registered storage.
+3. Give the storage a name if necessary.
+4. Enable public discovery if you want it listed publicly.
+5. Configure who can access it.
+6. Save the changes.
+
+Your storage should then appear in the public storage directory when it is online.
+
+---
+
+# Online Access Flow
+
+Once everything is configured:
+
+```text
+                    AFDrive Online
+                         │
+                         │ HTTPS
+                         ▼
+                  ┌──────────────┐
+                  │ Public Web   │
+                  │ Application  │
+                  └───────┬──────┘
+                          │
+                    Authenticated
+                       request
+                          │
+                          ▼
+                  ┌──────────────┐
+                  │    Relay     │
+                  └───────┬──────┘
+                          │
+                    Secure tunnel
+                          │
+                          ▼
+                  ┌──────────────┐
+                  │ AFDrive      │
+                  │ Agent        │
+                  └───────┬──────┘
+                          │
+                          ▼
+                  ┌──────────────┐
+                  │ Your Files   │
+                  │ on your      │
+                  │ device       │
+                  └──────────────┘
+```
+
+The Agent remains the component that accesses the actual filesystem.
+
+---
+
+# Local Mode Without Internet
+
+Online Mode is optional.
+
+If:
+
+```env
+AFDRIVE_ONLINE_ENABLED=false
+```
+
+AFDrive continues to work as a local network cloud.
+
+For example:
+
+```text
+Phone
+  │
+  │ Wi-Fi
+  ▼
+AFDrive Agent
+  │
+  ▼
+Local storage
+```
+
+You can therefore use AFDrive even when the internet is unavailable.
+
+---
+
+# Production Deployment
+
+For real public access, the `web/` application needs to be deployed to a server that supports:
+
+* Node.js
+* HTTPS
+* Persistent processes
+* WebSocket/Socket.IO connections
+
+Possible deployment approaches include:
+
+* VPS
+* Docker
+* A Node.js hosting platform
+* Other infrastructure that supports long-running WebSocket applications
+
+The public service should sit behind HTTPS.
+
+Example:
+
+```text
+https://afdrive.example
+```
+
+Then configure the Agent:
+
+```env
+AFDRIVE_RELAY_URL=https://afdrive.example
+```
+
+See:
+
+```text
+docs/deployment.md
+```
+
+for deployment-specific information.
+
+---
+
+# Security
+
+AFDrive Online can expose a computer's filesystem to remote users, so security is critical.
+
+**Only expose directories that you intentionally want AFDrive to manage.**
+
+Do not point AFDrive at:
+
+```text
+C:\
+/
+```
+
+or another directory containing sensitive operating-system files.
+
+Use a dedicated storage directory whenever possible.
+
+AFDrive includes protections such as:
+
+* Password hashing
+* Protected routes
+* Path traversal protection
+* Symlink escape protection
+* Secure file handling
+* Streaming transfers
+* Session protection
+* Rate limiting
+* Authentication and authorization
+* Agent identity
+* Pairing credentials
+* Public/private storage controls
+
+Before exposing a storage publicly, read:
+
+```text
+docs/security.md
+```
+
+---
+
+# Supabase and File Storage
+
+AFDrive Online uses Supabase for **online metadata**.
+
+Conceptually:
+
+```text
+Supabase
+├── Users
+├── Storage registrations
+├── Agent information
+├── Access permissions
+├── Pairing information
+└── Audit information
+```
+
+Not:
+
+```text
+Supabase
+└── All of your files
+```
+
+Your files remain on the device running the AFDrive Agent.
+
+This keeps AFDrive different from conventional cloud-storage services where your files are uploaded to the provider's storage infrastructure.
+
+---
+
+# Testing
+
+Before using Online Mode with important files, test the system with a separate test directory.
+
+### Agent tests
+
+```bash
+cd agent
+pytest tests/
+```
+
+### Web tests
+
+```bash
+cd web
+npm test
+```
+
+Test at least:
+
+* Login/logout
+* Agent registration
+* Pairing
+* Agent connection
+* Agent disconnection
+* Public/private storage
+* Access permissions
+* File browsing
+* Upload
+* Download
+* Rename
+* Delete
+* Folder creation
+* Search
+* Path traversal protection
+* Symlink protection
+* Large file transfers
+* Expired/revoked access
+* Offline Agent behavior
+
+---
+
+# Troubleshooting
+
+### Agent does not connect
+
+Check:
+
+```env
+AFDRIVE_ONLINE_ENABLED=true
+AFDRIVE_RELAY_URL=...
+```
+
+Then check:
+
+```bash
+python setup_cli.py status
+```
+
+Also make sure the Online web server is running and reachable.
+
+---
+
+### Storage shows as offline
+
+The Agent may not currently have an active connection to the Online relay.
+
+Check the Agent terminal and:
+
+```bash
+python setup_cli.py status
+```
+
+---
+
+### Pairing fails
+
+Make sure the pairing code:
+
+* Is correct
+* Has not expired
+* Has not already been used
+
+Generate a new pairing code from the Online dashboard if necessary.
+
+---
+
+### Local mode stopped working
+
+Online Mode should be additive.
+
+Make sure:
+
+```env
+AFDRIVE_ONLINE_ENABLED=false
+```
+
+and run:
+
+```bash
+python app.py
+```
+
+The Agent should still be accessible through its local IP address.
+
+---
+
+# Current Architecture
+
+AFDrive Online currently consists of:
+
+```text
+agent/
+    Flask + Python
+    Local filesystem
+    Local authentication
+    Online Agent identity
+    WebSocket tunnel
+
+web/
+    Node.js
+    Express
+    Socket.IO
+    Public web application
+    Relay
+
+Supabase
+    Authentication
+    PostgreSQL metadata
+```
+
+See:
+
+```text
+docs/architecture.md
+```
+
+for the detailed architecture and communication model.
+
+---
+
+# Roadmap
+
+The online architecture is designed so additional features can be added without changing the fundamental storage model.
+
+Possible future improvements include:
+
+* Resumable uploads/downloads
+* Better connection recovery
+* Multiple storage devices per account
+* More granular sharing permissions
+* Shareable storage/file links
+* QR-based sharing
+* File version history
+* Trash/recycle bin
+* WebDAV support
+* Automatic device backup
+* Native Android application
+* Native desktop Agent
+* Peer-to-peer connections
+* Optional cloud backup
+* End-to-end encryption
+* Storage synchronization
+
+These features are planned ideas and should not be considered available unless implemented and documented.
+
+---
+
+# Why AFDrive?
+
+Traditional cloud storage:
+
+```text
+Your Device
+     ↓
+Internet
+     ↓
+Cloud Provider
+     ↓
+Provider's Storage
+```
+
+AFDrive:
+
+```text
+Your Device
+     ↓
+AFDrive Agent
+     ↓
+Your Storage
+```
+
+AFDrive Online:
+
+```text
+Your Device
+     ↓
+AFDrive Agent
+     ↓
+Secure Online Connection
+     ↓
+Remote Browser
+```
+
+**The storage stays yours.**
+
+---
+
+# License
+
+See the repository license for licensing information.
+
+---
+
+# Related Project
+
+Original local-network AFDrive:
+
+https://github.com/ashwithfrank/AFDrive
+
+Online version:
+
+https://github.com/ashwithfrank/AFDrive-Online
+
+---
+
+## AFDrive
+
+**Your Personal Cloud. Your Device. Your Files.**
