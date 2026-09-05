@@ -1,0 +1,78 @@
+{# Reusable file/folder listing. Included from dashboard.html. #}
+<div class="toolbar">
+  <div class="breadcrumbs">
+    <a href="{{ url_for('dashboard') }}" class="crumb">{{ app_name }}</a>
+    {% for crumb in breadcrumbs %}
+      <span class="crumb-sep">/</span>
+      <a href="{{ url_for('dashboard', subpath=crumb.rel_path) }}" class="crumb">{{ crumb.name }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="toolbar-actions">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search files and folders...">
+      <div id="searchResults" class="search-results hidden"></div>
+    </div>
+    <button class="btn btn-secondary" id="newFolderBtn">+ New Folder</button>
+    <button class="btn btn-primary" id="uploadBtn">⬆ Upload</button>
+    <input type="file" id="fileInput" multiple hidden>
+  </div>
+</div>
+
+<div class="sort-bar">
+  <span class="muted small">Sort by:</span>
+  {% for key, label in [('name','Name'), ('size','Size'), ('date','Date')] %}
+    {% set next_order = 'desc' if (sort_key == key and order == 'asc') else 'asc' %}
+    <a class="sort-link {% if sort_key == key %}active{% endif %}"
+       href="{{ url_for('dashboard', subpath=rel_path, sort=key, order=next_order) }}">
+      {{ label }}{% if sort_key == key %} {{ '↓' if order == 'asc' else '↑' }}{% endif %}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="file-list" id="fileList" data-current-path="{{ rel_path }}">
+  {% if not folders and not files %}
+    <div class="empty-state">
+      <p>📭 This folder is empty.</p>
+      <p class="muted small">Upload a file or create a folder to get started.</p>
+    </div>
+  {% endif %}
+
+  {% for f in folders %}
+  <div class="file-row" data-path="{{ f.rel_path }}" data-name="{{ f.name }}" data-is-dir="true">
+    <a class="file-main" href="{{ url_for('dashboard', subpath=f.rel_path) }}">
+      <span class="file-icon icon-{{ f.icon }}"></span>
+      <span class="file-name">{{ f.name }}</span>
+    </a>
+    <span class="file-meta muted small only-desktop">—</span>
+    <span class="file-meta muted small only-desktop">{{ f.modified | int | timestamp_to_date }}</span>
+    <div class="file-actions">
+      <button class="icon-btn action-menu-btn" aria-label="Actions">⋮</button>
+      <div class="action-menu hidden">
+        <button class="action-open">Open</button>
+        <button class="action-rename">Rename</button>
+        <button class="action-delete action-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% for f in files %}
+  <div class="file-row" data-path="{{ f.rel_path }}" data-name="{{ f.name }}" data-is-dir="false" data-preview="{{ f.preview or '' }}">
+    <a class="file-main" href="#" data-action="preview">
+      <span class="file-icon icon-{{ f.icon }}"></span>
+      <span class="file-name">{{ f.name }}</span>
+    </a>
+    <span class="file-meta muted small only-desktop">{{ human_size(f.size) }}</span>
+    <span class="file-meta muted small only-desktop">{{ f.modified | int | timestamp_to_date }}</span>
+    <div class="file-actions">
+      <button class="icon-btn action-menu-btn" aria-label="Actions">⋮</button>
+      <div class="action-menu hidden">
+        <button class="action-download">Download</button>
+        <button class="action-rename">Rename</button>
+        <button class="action-delete action-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>

@@ -1,0 +1,31 @@
+<%- include('partials/head', { title: mode === 'signup' ? 'Sign up' : 'Log in' }) %>
+
+<div class="auth-card">
+  <h1><%= mode === 'signup' ? 'Create your AFDrive Online account' : 'Log in to AFDrive Online' %></h1>
+  <p class="muted">
+    This account manages <em>your dashboard</em> — registering storages,
+    controlling public/private, and access. It's separate from the
+    username/password on each individual AFDrive Agent.
+  </p>
+
+  <% if (error) { %><p class="error-msg"><%= error %></p><% } %>
+  <% if (typeof created !== 'undefined' && created) { %>
+    <p class="success-msg">Account created — you can log in now.</p>
+  <% } %>
+
+  <form method="post" action="<%= mode === 'signup' ? '/signup' : '/login' %>">
+    <label>Email<input type="email" name="email" required autocomplete="email" /></label>
+    <label>Password<input type="password" name="password" required minlength="8" autocomplete="current-password" /></label>
+    <button class="btn btn-primary" type="submit"><%= mode === 'signup' ? 'Create account' : 'Log in' %></button>
+  </form>
+
+  <p class="muted">
+    <% if (mode === 'signup') { %>
+      Already have an account? <a href="/login">Log in</a>
+    <% } else { %>
+      New here? <a href="/signup">Create an account</a>
+    <% } %>
+  </p>
+</div>
+
+<%- include('partials/foot') %>

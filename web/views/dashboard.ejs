@@ -1,0 +1,55 @@
+<%- include('partials/head', { title: 'Dashboard' }) %>
+
+<h1>Your storages</h1>
+
+<form method="post" action="/dashboard/pairing-code" class="inline-form">
+  <button class="btn btn-primary" type="submit">+ Register a new storage</button>
+</form>
+
+<% if (pairing) { %>
+  <div class="pairing-box">
+    <p>Run this on the device you want to register:</p>
+    <pre>python setup_cli.py pair <%= pairing.code %></pre>
+    <p class="muted">
+      This code expires at <%= new Date(pairing.expiresAt).toLocaleTimeString() %> and can
+      only be used once.
+    </p>
+  </div>
+<% } %>
+
+<% if (servers.length === 0) { %>
+  <p class="empty-state">No storages registered yet.</p>
+<% } else { %>
+  <ul class="storage-list">
+    <% servers.forEach(function(s) { %>
+      <li class="storage-card">
+        <span class="status-dot <%= s.reallyOnline ? 'online' : 'offline' %>"></span>
+        <div class="storage-info">
+          <span class="storage-name"><%= s.display_name %></span>
+          <div class="storage-meta">
+            <%= s.reallyOnline ? 'Online' : 'Offline' %>
+            · <%= s.is_public ? 'Public' : 'Private' %>
+            <% if (s.last_seen_at) { %>· last seen <%= new Date(s.last_seen_at).toLocaleString() %><% } %>
+          </div>
+        </div>
+        <div class="storage-actions">
+          <% if (s.reallyOnline) { %>
+            <a class="btn btn-small" href="/s/<%= s.id %>/login" target="_blank" rel="noopener">Open</a>
+          <% } %>
+          <a class="btn btn-small" href="/dashboard/servers/<%= s.id %>/access">Access</a>
+          <form method="post" action="/dashboard/servers/<%= s.id %>/toggle-public" class="inline-form">
+            <button class="btn btn-small" type="submit">
+              Make <%= s.is_public ? 'private' : 'public' %>
+            </button>
+          </form>
+          <form method="post" action="/dashboard/servers/<%= s.id %>/revoke" class="inline-form"
+                onsubmit="return confirm('Revoke this device? It will need to be re-paired to reconnect.');">
+            <button class="btn btn-small btn-danger" type="submit">Revoke</button>
+          </form>
+        </div>
+      </li>
+    <% }); %>
+  </ul>
+<% } %>
+
+<%- include('partials/foot') %>

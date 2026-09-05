@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>{% block title %}{{ app_name }}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<meta name="theme-color" content="#4f46e5">
+</head>
+<body>
+
+{% if username %}
+<header class="topbar">
+  <div class="topbar-left">
+    <button id="menuToggle" class="icon-btn only-mobile" aria-label="Menu">☰</button>
+    <a href="{{ url_for('dashboard') }}" class="brand">
+      <span class="brand-mark">AF</span>
+      <span class="brand-name">{{ app_name }}</span>
+    </a>
+  </div>
+  <div class="topbar-right">
+    <button id="themeToggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">
+      <span class="theme-icon-dark">🌙</span>
+      <span class="theme-icon-light">☀️</span>
+    </button>
+    <span class="username only-desktop">{{ username }}</span>
+    <a href="{{ url_for('logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+  </div>
+</header>
+{% endif %}
+
+<main class="page">
+  {% block content %}{% endblock %}
+</main>
+
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

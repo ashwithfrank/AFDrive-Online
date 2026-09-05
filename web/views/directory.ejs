@@ -1,0 +1,26 @@
+<%- include('partials/head', { title: 'Discover' }) %>
+
+<h1>Public storages</h1>
+
+<form class="search-row" method="get" action="/directory">
+  <input type="search" name="q" placeholder="Search public storages…" value="<%= q %>" />
+  <button class="btn" type="submit">Search</button>
+</form>
+
+<% if (servers.length === 0) { %>
+  <p class="empty-state">No public storages found<% if (q) { %> for "<%= q %>"<% } %>.</p>
+<% } else { %>
+  <ul class="storage-list">
+    <% servers.forEach(function(s) { %>
+      <li class="storage-card">
+        <span class="status-dot <%= s.online ? 'online' : 'offline' %>"></span>
+        <div class="storage-info">
+          <a class="storage-name" href="/s/<%= s.id %>/login"><%= s.display_name %></a>
+          <div class="storage-meta"><%= s.online ? 'Online' : 'Offline' %> · Personal Cloud</div>
+        </div>
+      </li>
+    <% }); %>
+  </ul>
+<% } %>
+
+<%- include('partials/foot') %>

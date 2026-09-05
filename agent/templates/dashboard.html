@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ app_name }} — Dashboard{% endblock %}
+{% block content %}
+
+{% set percent = ((totals.total_size / disk.total) * 100) if disk.total else 0 %}
+
+<section class="stats-panel card">
+  <div class="storage-row">
+    <div class="storage-label">
+      <strong>Storage</strong>
+      <span class="muted small">{{ human_size(totals.total_size) }} used of {{ human_size(disk.total) }} on this device</span>
+    </div>
+    <div class="storage-bar">
+      <div class="storage-bar-fill" style="width: {{ percent if percent < 100 else 100 }}%;"></div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box">
+      <span class="stat-value" id="statFiles">{{ totals.file_count }}</span>
+      <span class="stat-label">Files</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-value" id="statFolders">{{ totals.folder_count }}</span>
+      <span class="stat-label">Folders</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-value" id="statUsed">{{ human_size(totals.total_size) }}</span>
+      <span class="stat-label">Used Space</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-value" id="statFree">{{ human_size(disk.free) }}</span>
+      <span class="stat-label">Available</span>
+    </div>
+  </div>
+</section>
+
+{% if rel_path == "" and recent_files %}
+<section class="recent-panel">
+  <h2 class="section-title">Recent files</h2>
+  <div class="recent-scroll">
+    {% for f in recent_files %}
+    <a class="recent-card card" href="#" data-action="preview" data-path="{{ f.rel_path }}" data-name="{{ f.name }}" data-preview="{{ 'true' }}">
+      <span class="file-icon icon-{{ f.icon }} icon-lg"></span>
+      <span class="recent-name">{{ f.name }}</span>
+      <span class="muted small">{{ human_size(f.size) }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="files-panel card">
+  {% include "files.html" %}
+</section>
+
+<div id="previewModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="previewTitle"></span>
+      <button class="icon-btn" id="previewClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="previewBody"></div>
+  </div>
+</div>
+
+<div id="renameModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content modal-sm">
+    <div class="modal-header"><span>Rename</span><button class="icon-btn" id="renameClose" aria-label="Close">✕</button></div>
+    <div class="modal-body">
+      <input type="text" id="renameInput" class="text-input">
+      <button class="btn btn-primary btn-block" id="renameConfirm">Rename</button>
+    </div>
+  </div>
+</div>
+
+<div id="newFolderModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content modal-sm">
+    <div class="modal-header"><span>New Folder</span><button class="icon-btn" id="newFolderClose" aria-label="Close">✕</button></div>
+    <div class="modal-body">
+      <input type="text" id="newFolderInput" class="text-input" placeholder="Folder name">
+      <button class="btn btn-primary btn-block" id="newFolderConfirm">Create</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content modal-sm">
+    <div class="modal-header"><span>Please confirm</span><button class="icon-btn" id="confirmClose" aria-label="Close">✕</button></div>
+    <div class="modal-body">
+      <p id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+        <button class="btn btn-danger" id="confirmOk">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="uploadProgress" class="upload-progress hidden">
+  <div class="upload-progress-bar"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
+  <span class="muted small" id="uploadProgressLabel">Uploading...</span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{# type="application/json" is inert data, not executable script, so it
+   isn't affected by the script-src CSP directive — app.js reads and
+   JSON.parses this instead of relying on an inline <script> block. #}
+<script type="application/json" id="afdrive-config">
+{
+  "currentPath": {{ rel_path | tojson }},
+  "endpoints": {
+    "upload": {{ url_for('api_upload') | tojson }},
+    "createFolder": {{ url_for('api_create_folder') | tojson }},
+    "rename": {{ url_for('api_rename') | tojson }},
+    "delete": {{ url_for('api_delete') | tojson }},
+    "search": {{ url_for('api_search') | tojson }},
+    "stats": {{ url_for('api_stats') | tojson }},
+    "download": {{ url_for('api_download', filepath='') | tojson }},
+    "preview": {{ url_for('api_preview', filepath='') | tojson }},
+    "browseBase": {{ url_for('dashboard') | tojson }}
+  }
+}
+</script>
+{% endblock %}

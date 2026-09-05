@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card card error-card">
+    <span class="error-code">{{ code }}</span>
+    <p>{{ message }}</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+  </div>
+</div>
+{% endblock %}
