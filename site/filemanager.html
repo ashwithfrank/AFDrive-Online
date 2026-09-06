@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storage · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="directory.html">Discover</a>
+      <a href="storages.html">My Storages</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <p><a href="storages.html">← Back to My Storages</a></p>
+    <h1 id="server-name">Storage</h1>
+    <p id="error-msg" class="error-msg" hidden></p>
+    <p id="offline-banner" class="banner warn" hidden>
+      This storage is currently offline. The device's AFDrive Agent must be running and connected before you can browse it.
+    </p>
+
+    <div id="details" hidden>
+      <p>
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text"></span>
+        &nbsp;·&nbsp;
+        <span class="role-badge" id="role-badge"></span>
+      </p>
+      <p class="muted" id="last-seen"></p>
+
+      <p>
+        <a class="btn btn-primary" id="open-btn" href="#" target="_blank" rel="noopener">Open file manager ↗</a>
+      </p>
+      <p class="muted">
+        Opens in a new tab, on the storage's own Agent connection. Browsing,
+        search, previews, uploads and downloads happen there, subject to
+        your role (<span id="role-explain"></span>).
+      </p>
+    </div>
+  </main>
+
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/filemanager.js"></script>
+</body>
+</html>

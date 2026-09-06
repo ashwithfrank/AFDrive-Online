@@ -141,3 +141,27 @@ create policy "owners can read audit log for their servers"
     select 1 from public.servers s
     where s.id = audit_log.server_id and s.owner_id = auth.uid()
   ));
+
+-- ---------------------------------------------------------------------
+-- Added for the GitHub Pages / static-frontend split (see
+-- docs/architecture-pages-split.md).
+--
+-- The static site queries `servers` directly via supabase-js instead of
+-- through a server-side service-role process, so a user who has been
+-- granted access to a PRIVATE server (via access_grants) also needs
+-- permission to read that one server row — not just permission to use
+-- it through the relay's proxy (which already checked access_grants
+-- itself, using the service-role key, so this does not change who may
+-- reach a storage's files; it only lets an already-authorized grantee
+-- see its name/status on the static site).
+-- ---------------------------------------------------------------------
+drop policy if exists "grantees can read servers they have access to" on public.servers;
+create policy "grantees can read servers they have access to"
+  on public.servers for select
+  using (exists (
+    select 1 from public.access_grants g
+    where g.server_id = servers.id
+      and g.user_id = auth.uid()
+      and g.revoked_at is null
+      and (g.expires_at is null or g.expires_at > now())
+  ));

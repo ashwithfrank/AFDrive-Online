@@ -1,8 +1,8 @@
 # AFDrive Agent ↔ Online protocol
 
 This document is the single source of truth for the wire format used
-between `agent/tunnel_client.py` and `web/routes/agentSocket.js` +
-`web/lib/proxyRegistry.js`. If you change one side, update this file and
+between `agent/tunnel_client.py` and `relay/routes/agentSocket.js` +
+`relay/lib/proxyRegistry.js`. If you change one side, update this file and
 the other side in the same commit.
 
 There are two separate channels:

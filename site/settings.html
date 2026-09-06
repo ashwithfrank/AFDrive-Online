@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="storages.html">My Storages</a>
+      <a href="#" id="logout-link">Log out</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>Settings</h1>
+    <p class="muted" id="account-email"></p>
+
+    <div class="auth-card" style="margin-left:0;">
+      <h2>Change password</h2>
+      <p id="error-msg" class="error-msg" hidden></p>
+      <p id="success-msg" class="success-msg" hidden>Password updated.</p>
+      <form id="password-form">
+        <label>New password
+          <input type="password" name="password" required minlength="8" autocomplete="new-password" />
+        </label>
+        <button class="btn btn-primary" type="submit">Update password</button>
+      </form>
+    </div>
+  </main>
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/settings.js"></script>
+</body>
+</html>

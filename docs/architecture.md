@@ -1,93 +1,143 @@
-# AFDrive — Architecture
+# AFDrive Online — Architecture
 
-## Two components, one philosophy
+## Overview
 
-AFDrive Online never becomes your storage provider. It exists to answer
-three questions for a browser: *which storages exist, who's allowed to
-open one, and how do I reach the device that's actually holding it.*
-Every byte of file content still flows directly between your browser
-and the owning Agent — the relay only ever sees it in transit, the same
-way any reverse proxy does.
+AFDrive Online keeps the user's files on the device running the AFDrive Agent. The online service provides authentication, storage metadata, permissions, pairing, presence, and a remote transport path.
 
+```text
+                 ┌─────────────────────┐
+                 │     GitHub Pages    │
+                 │       /site         │
+                 │  Static Web App     │
+                 └─────────┬───────────┘
+                           │
+                    HTTPS / Supabase
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+       ┌─────▼─────┐               ┌─────▼─────┐
+       │ Supabase  │               │   Relay   │
+       │ Auth + DB │               │ /relay    │
+       └───────────┘               └─────┬─────┘
+                                         │ WSS
+                                         ▼
+                                  ┌─────────────┐
+                                  │ AFDrive     │
+                                  │ Agent       │
+                                  │ /agent      │
+                                  └──────┬──────┘
+                                         │
+                                         ▼
+                                  Local filesystem
 ```
-Your Device                          AFDrive Online                    Remote Browser
-┌────────────────┐                  ┌──────────────────┐               ┌──────────────┐
-│ AFDrive Agent   │  outbound WSS    │ Relay (Socket.IO) │   HTTPS       │ Browser      │
-│ (Flask, unchanged│ ───────────────▶│  + Express web app│◀─────────────│              │
-│  routes/fs_utils)│                 │  + Supabase (meta) │              │              │
-│                 │                  └──────────────────┘               └──────────────┘
-│ Local filesystem │
-└────────────────┘
+
+## Why the relay is separate
+
+GitHub Pages serves static files and cannot maintain the persistent Node.js process required for Agent WebSocket connections. The relay therefore runs separately on infrastructure that supports long-lived HTTP/WebSocket connections.
+
+The relay is not the storage provider. It routes browser requests to connected Agents. It is nevertheless a trusted transit point and can observe file bytes while they are in transit.
+
+## Supabase
+
+The project uses one central Supabase project for the AFDrive Online service.
+
+Supabase handles:
+
+- Authentication
+- User accounts
+- Storage metadata
+- Ownership
+- Access grants
+- Pairing data
+- Agent identity metadata
+- Audit/diagnostic metadata where configured
+
+Actual file contents remain on the Agent device.
+
+## Site
+
+`site/` is a static multi-page frontend intended for GitHub Pages.
+
+It communicates directly with Supabase using the browser-safe anon/publishable key and communicates with the relay only for operations that require the live Agent tunnel.
+
+## Relay
+
+`relay/` provides:
+
+- Persistent Socket.IO connections from Agents
+- Agent registration/pairing endpoints
+- Live Agent presence tracking
+- Authorization checks for remote storage access
+- Remote browser-to-Agent HTTP proxying
+- Live Agent administration actions where required
+
+The relay does not render the public frontend.
+
+## Agent
+
+`agent/` contains the Flask-based AFDrive server plus Online Mode support.
+
+The Agent:
+
+- Owns the actual filesystem access.
+- Makes the outbound connection to the relay.
+- Handles local/LAN requests.
+- Handles remote tunneled requests.
+- Applies filesystem safety checks.
+- Enforces Agent-side authorization rules implemented by the current code.
+
+## Remote request flow
+
+```text
+Browser
+  │
+  │ HTTPS
+  ▼
+Relay
+  │
+  │ authenticated tunnel
+  ▼
+Agent
+  │
+  ▼
+AFDrive route
+  │
+  ▼
+Filesystem
 ```
 
-The Agent only ever makes *outbound* connections. It never listens for
-inbound internet traffic. This is what makes NAT/CGNAT and "no port
-forwarding" possible: the relay is reachable, the Agent reaches out to
-it, and the relay routes browser requests down that same connection.
+Uploads and downloads are streamed rather than intentionally buffering entire files in memory.
 
-## Why a generic HTTP-over-WebSocket proxy, not a rewrite
+## Pairing
 
-The existing AFDrive Flask app already has a correct, tested security
-model for filesystem access (`fs_utils.safe_join_storage`, session
-auth, CSRF-safe forms). Rather than re-implementing upload/download/
-rename/search/preview against a new API surface, the tunnel forwards
-raw HTTP requests to the Agent's own loopback Flask server and streams
-the response back unmodified. Every existing route works remotely with
-zero duplicated logic — see `shared/protocol.md` for the exact message
-format, and `agent/tunnel_client.py` / `web/routes/agentSocket.js` +
-`web/routes/proxy.js` for the two ends of it.
+A storage is created/registered in the online service and a short-lived pairing code is issued. The Agent exchanges the one-time code with the relay and receives persistent device credentials that are stored locally.
 
-Both uploads and downloads are streamed in fixed-size chunks in both
-directions — a multi-gigabyte file is never fully buffered in the
-relay's or the Agent's memory (see `_body_generator` /
-`_forward_request` in `tunnel_client.py`, and the `data`/`end` handlers
-in `web/routes/proxy.js`).
+The pairing code is not intended to be a permanent Agent credential.
 
-## Why Supabase (Postgres) over Firestore
+## Permissions
 
-Every piece of metadata AFDrive Online needs is inherently relational
-with real foreign keys and cascading deletes: a server belongs to one
-owner, an access grant belongs to one server and optionally one user, a
-pairing code is consumed by exactly one registration. Postgres' foreign
-keys and `CHECK` constraints enforce these invariants at the database
-level rather than in application code, and Row Level Security lets the
-dashboard's own Supabase queries be scoped to "servers I own" without
-the relay needing to re-derive that on every read. Supabase Auth also
-gives us email/password accounts, session tokens, and admin user
-creation out of the box — see `docs/supabase_schema.sql`.
+The service distinguishes storage ownership and access grants. Remote access is authorized before a request is sent to an Agent, and Agent-side checks provide an additional enforcement layer.
 
-Firestore would work for a pure key-value "device status" cache, but
-would need denormalized duplicate writes (or a second database) the
-moment you need "all grants for this server" and "all servers this
-user can access" to both be cheap, consistent queries.
+The exact roles and policies are defined in `docs/supabase_schema.sql` and the relay/Agent implementation.
 
-## Component boundaries
+## Presence
 
-- `agent/` — unchanged AFDrive Flask app, plus `identity.py` (device
-  registration/credentials), `tunnel_client.py` (the outbound proxy
-  client), `setup_cli.py` (pairing wizard). Runs standalone with
-  `AFDRIVE_ONLINE_ENABLED=false` exactly like the original project.
-- `web/` — the relay + public web app, as one Node/Express process.
-  Owns the Socket.IO server Agents connect to, the public directory,
-  the owner dashboard, and Supabase Auth-backed accounts.
-- `shared/protocol.md` — the wire contract between the two. Change one
-  side, update this file and the other side together.
+The relay maintains the currently connected Agent registry in memory. Online status shown to the web application is based on the live relay connection rather than merely trusting a database status field.
 
-## Known limitations (V1, documented rather than hidden)
+Current limitation: the registry is single-process. Multiple relay instances require sticky routing or shared coordination.
 
-- **Single relay process.** `web/lib/proxyRegistry.js` is in-memory. If
-  you horizontally scale the relay, either use sticky sessions keyed on
-  `server_id` or replace the registry with a shared pub/sub store.
-- **Access grants by email before signup.** `access_grants.invited_email`
-  is not yet automatically linked to `user_id` the moment that person
-  creates an account — for V1 this requires a small follow-up job or a
-  "claim my invites on first login" check in `routes/auth.js`.
-- **No resumable uploads yet.** The chunked-streaming design in
-  `shared/protocol.md` was built so resumability could be layered on
-  later (each chunk is already ordered and independently forwardable)
-  without changing the wire format, but resume-after-interruption isn't
-  implemented in this pass.
-- **Session refresh.** The relay account cookie holds a Supabase access
-  token directly and isn't refreshed automatically; a user is logged
-  out after that token's normal expiry rather than staying signed in
-  indefinitely. See `routes/auth.js`.
+## Local mode
+
+The Agent can continue running without Online Mode:
+
+```text
+Browser on LAN
+      │
+      ▼
+AFDrive Agent
+      │
+      ▼
+Local filesystem
+```
+
+This mode does not depend on GitHub Pages, Supabase, or the relay.

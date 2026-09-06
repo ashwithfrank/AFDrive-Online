@@ -1,0 +1,25 @@
+{
+  "name": "afdrive-relay",
+  "version": "2.0.0",
+  "description": "AFDrive relay — reverse-tunnel + auth-checked proxy between the static AFDrive Online frontend and AFDrive Agents. No HTML views; the frontend lives in /site and talks to Supabase directly.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

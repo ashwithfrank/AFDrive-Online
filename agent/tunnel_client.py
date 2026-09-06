@@ -12,7 +12,7 @@ This is intentionally a *generic* HTTP proxy, not a reimplementation of
 AFDrive's routes: every existing Flask route (login, dashboard, every
 /api/* endpoint) becomes remotely reachable through the tunnel with zero
 duplicated business logic. See shared/protocol.md for the exact message
-shapes used here, which must match web/lib/proxyRegistry.js on the relay.
+shapes used here, which must match relay/lib/proxyRegistry.js on the relay.
 
 This module never listens for inbound connections and never exposes the
 storage root directly — every forwarded request still goes through the

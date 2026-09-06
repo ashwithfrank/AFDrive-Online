@@ -9,9 +9,9 @@ agent/storage/user_files/*
 !agent/storage/user_files/.gitkeep
 
 # Web (Node)
-web/node_modules/
-web/.env
-web/npm-debug.log*
+relay/node_modules/
+relay/.env
+relay/npm-debug.log*
 
 # General
 .DS_Store

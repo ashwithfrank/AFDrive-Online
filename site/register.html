@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="directory.html">Discover</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p id="error-msg" class="error-msg" hidden></p>
+      <form id="register-form">
+        <label>Email
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label>Password
+          <input type="password" name="password" required minlength="8" autocomplete="new-password" />
+        </label>
+        <button class="btn btn-primary" type="submit">Register</button>
+      </form>
+      <p class="muted">Already have an account? <a href="login.html">Log in</a></p>
+    </div>
+  </main>
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/register.js"></script>
+</body>
+</html>

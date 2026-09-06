@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access management · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="storages.html">My Storages</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <p><a href="storages.html">← Back to My Storages</a></p>
+    <h1 id="server-name">Access</h1>
+    <p id="error-msg" class="error-msg" hidden></p>
+
+    <div class="inline-form-block">
+      <form id="grant-form" style="display:flex; gap:0.75rem; align-items:end; flex-wrap:wrap;">
+        <label>Email
+          <input type="email" name="email" required placeholder="person@example.com" />
+        </label>
+        <label>Role
+          <select name="role">
+            <option value="read">Read only</option>
+            <option value="read_write">Read / write</option>
+          </select>
+        </label>
+        <button class="btn btn-primary" type="submit">Grant access</button>
+      </form>
+    </div>
+
+    <ul class="grant-list" id="grant-list"></ul>
+    <p class="empty-state" id="empty-state" hidden>No one else has access to this storage yet.</p>
+  </main>
+
+  <template id="grant-template">
+    <li>
+      <span class="grant-email" style="flex:1"></span>
+      <span class="tag role-tag"></span>
+      <button class="btn btn-small btn-danger revoke-grant-btn" type="button">Revoke</button>
+    </li>
+  </template>
+
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/access.js"></script>
+</body>
+</html>

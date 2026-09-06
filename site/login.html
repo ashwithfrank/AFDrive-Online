@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="directory.html">Discover</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <div class="auth-card">
+      <h1>Log in</h1>
+      <p id="created-msg" class="success-msg" hidden>Account created — check your email if confirmation is required, then log in.</p>
+      <p id="error-msg" class="error-msg" hidden></p>
+      <form id="login-form">
+        <label>Email
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label>Password
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+        <button class="btn btn-primary" type="submit">Log in</button>
+      </form>
+      <p class="muted">No account yet? <a href="register.html">Register</a></p>
+      <p class="muted"><a href="#" id="forgot-link">Forgot password?</a></p>
+    </div>
+  </main>
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/login.js"></script>
+</body>
+</html>

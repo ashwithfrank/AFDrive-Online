@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discover · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="directory.html">Discover</a>
+      <a href="storages.html">My Storages</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>Public Storages</h1>
+    <div class="search-row">
+      <input type="search" id="search-input" placeholder="Search by name…" />
+    </div>
+    <ul class="storage-list" id="storage-list"></ul>
+    <p class="empty-state" id="empty-state" hidden>No public storages match that search.</p>
+  </main>
+
+  <template id="storage-card-template">
+    <li class="storage-card">
+      <span class="status-dot"></span>
+      <div class="storage-info">
+        <a class="storage-name" href="#"></a>
+        <div class="storage-meta"></div>
+      </div>
+    </li>
+  </template>
+
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/directory.js"></script>
+</body>
+</html>

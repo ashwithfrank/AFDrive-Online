@@ -11,7 +11,7 @@ revocable choice — not to make the risk disappear.
 There are three distinct boundaries, and it matters which one is
 answering which question:
 
-1. **Relay-level authorization** (`web/routes/proxy.js`,
+1. **Relay-level authorization** (`relay/routes/proxy.js`,
    `authorizeAccess`): *may this browser talk to this Agent at all?*
    Public servers: yes, always. Private servers: only the owner, or
    someone with a non-revoked, non-expired row in `access_grants`.
@@ -54,7 +54,7 @@ A naive proxy would let one Agent's `Set-Cookie: session=...; Path=/`
 leak onto every other server hosted under the same relay domain. The
 relay rewrites every `Set-Cookie` from an Agent to `Path=/s/<server_id>`
 and forces `Secure` before it ever reaches the browser (see
-`http_response_start` in `web/routes/agentSocket.js`) — one storage's
+`http_response_start` in `relay/routes/agentSocket.js`) — one storage's
 session cookie is never sent to another.
 
 ## Transport security

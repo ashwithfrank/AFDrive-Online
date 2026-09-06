@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Storages · AFDrive</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">AFDrive</a>
+    <nav>
+      <a href="directory.html">Discover</a>
+      <a href="storages.html">My Storages</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logout-link">Log out</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>My Storages</h1>
+    <p id="error-msg" class="error-msg" hidden></p>
+
+    <div class="inline-form-block">
+      <button class="btn btn-primary" id="pair-btn" type="button">Generate pairing code</button>
+      <span class="muted">Use this in the AFDrive CLI/Agent (<code>python setup_cli.py pair &lt;code&gt;</code>) to add a new storage.</span>
+    </div>
+    <div class="pairing-box" id="pairing-box" hidden>
+      <p>Pairing code (expires in 10 minutes, single use):</p>
+      <pre id="pairing-code"></pre>
+    </div>
+
+    <ul class="storage-list" id="storage-list"></ul>
+    <p class="empty-state" id="empty-state" hidden>No storages yet. Install the Agent and pair it using the button above.</p>
+  </main>
+
+  <template id="storage-card-template">
+    <li class="storage-card">
+      <span class="status-dot"></span>
+      <div class="storage-info">
+        <a class="storage-name" href="#"></a>
+        <div class="storage-meta"></div>
+      </div>
+      <div class="storage-actions">
+        <a class="btn btn-small open-btn" href="#">Open</a>
+        <button class="btn btn-small rename-btn" type="button">Rename</button>
+        <button class="btn btn-small toggle-btn" type="button"></button>
+        <a class="btn btn-small access-btn" href="#">Access</a>
+        <button class="btn btn-small btn-danger revoke-btn" type="button">Revoke Agent</button>
+        <button class="btn btn-small btn-danger remove-btn" type="button">Remove</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="assets/js/theme.js"></script>
+  <script type="module" src="assets/js/storages.js"></script>
+</body>
+</html>
